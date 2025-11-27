@@ -1,9 +1,9 @@
 #!/bin/bash
 
-trap "docker stack rm kauriservice" EXIT
+trap "docker stack rm netservice" EXIT
 
-FILENAME=kauri.yaml
-EXPORT_FILENAME=kauri-temp.yaml
+FILENAME=net.yaml
+EXPORT_FILENAME=net-temp.yaml
 
 ORIGINAL_STRING=thecmd
 QTY1_STRING=theqty1
@@ -28,26 +28,32 @@ do
   echo "*** This setup needs ${split[3]} physical machines! ***"
   echo '**********************************************'
 
-  for i in {1..5}
+  for i in {1..1}
   do
         # Deploy experiment
-        docker stack deploy -c kauri-temp.yaml kauriservice &
+        docker stack deploy -c net-temp.yaml netservice &
         # Docker startup time + 5*60s of experiment runtime
-        sleep 450
-        
+        sleep 150
+
+        for container in $(docker ps -q -f name="server")
+        do
+          docker logs $container > ~/logs/$container.log
+        done
+
+        sleep 100
         # Collect and print results.
         for container in $(docker ps -q -f name="server")
         do
-                if [ ! $(docker exec -it $container bash -c "cd Kauri-Public && test -e log0") ]
+                if [ ! $(docker exec -it $container bash -c "cd NetBFT-Public && test -e log0") ]
                 then
-                  docker exec -it $container bash -c "cd Kauri-Public && tac log* | grep -m1 'commit <block'"
-                  docker exec -it $container bash -c "cd Kauri-Public && tac log* | grep -m1 'x now state'"
-                  docker exec -it $container bash -c "cd Kauri-Public && tac log* | grep -m1 'Average'"
+                  docker exec -it $container bash -c "cd NetBFT-Public && tac log* | grep -m1 'commit <block'"
+                  docker exec -it $container bash -c "cd NetBFT-Public && tac log* | grep -m1 'x now state'"
+                  docker exec -it $container bash -c "cd NetBFT-Public && tac log* | grep -m1 'Average'"
                   break
                 fi
         done
 
-        docker stack rm kauriservice
+        docker stack rm netservice
         sleep 30
 
   done
