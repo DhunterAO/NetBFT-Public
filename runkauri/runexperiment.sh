@@ -12,6 +12,9 @@ QTY2_STRING=theqty2
 FILENAME2="experiments"
 LINES=$(cat $FILENAME2 | grep "^[^#;]")
 
+rm -rf ~/logs/*
+mkdir -p ~/logs
+
 # Each LINE in the experiment file is one experimental setup
 for LINE in $LINES
 do
